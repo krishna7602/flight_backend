@@ -9,23 +9,32 @@ const app = express();
 // Connect DB
 connectDB();
 
-// CORS whitelist
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')
   : [];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
+      // Allow server-to-server, Postman, curl
       if (!origin) return callback(null, true);
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error('Not allowed by CORS'), false);
+
+      // IMPORTANT: do NOT throw error
+      return callback(null, false);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+// ✅ Explicitly handle preflight
+app.options('*', cors());
+
 
 // Middleware
 app.use(express.json());
